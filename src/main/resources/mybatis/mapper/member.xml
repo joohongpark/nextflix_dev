@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.movie.member.dao.MemberDao">	
+
+	<sql id="whereClause">
+		<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchWord)">
+			<choose>
+				<when test='searchType == "ID"'>
+					AND mem_id like '%' || #{searchWord} || '%'
+				</when>
+				<when test='searchType == "NM"'>
+					AND mem_name like '%' || #{searchWord} || '%'
+				</when>
+				<when test='searchType == "HP"'>
+					AND mem_hp like '%' || #{searchWord} || '%'
+				</when>
+			</choose>
+		</if>	  	 
+	</sql>
+
+	<select id="getMember" 
+	        parameterType="String" 
+	        resultType="com.movie.member.vo.MemberVO" >
+			SELECT mem_id    
+			     , mem_pass  
+			     , mem_name  
+			     , mem_sex
+			     , mem_auth  
+			     , TO_CHAR(mem_bir, 'YYYY-MM-DD') AS mem_bir    
+			     , mem_hp   
+			     , mem_add1 
+			     , mem_add2 
+			     , mem_zip  
+			     , mem_del_yn  
+			  FROM member     
+			 WHERE mem_id = #{memId}	
+	</select>	
+	
+	<select id="getMemberList" 
+	        parameterType="com.movie.member.vo.MemberSearchVO"
+	        resultType="com.movie.member.vo.MemberVO"  >
+		<include refid="common.PRE_PAGING_QRY" />
+	  	 SELECT *
+	  	  FROM member
+	  	 WHERE mem_del_yn = 'N'
+	  	 <include refid="whereClause" />
+	     ORDER BY mem_id ASC
+	  <include refid="common.POST_PAGING_QRY" />
+	</select>
+	
+	
+	<select id="getMemberCount" 
+	        parameterType="com.movie.member.vo.MemberSearchVO" 
+	        resultType="int" >
+			SELECT COUNT(*) 
+	  	 	 FROM member
+	  		WHERE mem_del_yn = 'N'   
+		<include refid="whereClause" />
+	</select>
+	
+	<insert id="insertMember" 
+	        parameterType="com.movie.member.vo.MemberVO"  >
+		 INSERT INTO member ( 
+		        mem_id,     mem_pass,    mem_name, 
+		        mem_auth,   mem_bir,     mem_hp,     
+		        mem_add1,   mem_add2,    mem_zip,     
+		        mem_del_yn, mem_sex
+		        
+		      ) VALUES ( 
+		        #{memId},   #{memPass}, #{memName}, 
+		        'M',		#{memBir},  #{memHp}, 
+		        #{memAdd1}, #{memAdd2}, #{memZip},   
+		        'N' 	  , #{memSex}
+		      )
+		      
+	</insert>
+	
+	<update id="updateMember" 
+	        parameterType="com.movie.member.vo.MemberVO">
+		UPDATE member       
+		   SET mem_name   = #{memName}
+		     , mem_sex    = #{memSex} 
+		     , mem_bir    = #{memBir}  
+		     , mem_hp     = #{memHp}  
+		     , mem_add1   = #{memAdd1}
+		     , mem_add2   = #{memAdd2}
+		     , mem_zip    = #{memZip} 
+		 WHERE mem_id     = #{memId}  
+		   
+	</update>
+	
+	<delete id="deleteMember"
+	parameterType="com.movie.member.vo.MemberVO" >
+			UPDATE member 
+				  SET mem_del_yn = 'Y'	 
+				WHERE mem_id = #{memId}
+	</delete>
+	
+	
+</mapper>  
+

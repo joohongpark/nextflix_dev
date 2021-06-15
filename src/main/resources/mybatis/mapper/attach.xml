@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.movie.attach.dao.IAttachDao">
+
+	<select id="getAttach" parameterType="int" 
+	        resultType="com.movie.attach.vo.AttachVO">
+		SELECT atch_no
+		     , atch_parent_no
+		     , atch_category
+		     , atch_file_name
+		     , atch_original_name
+		     , atch_file_size
+		     , atch_fancy_size
+		     , atch_content_type
+		     , atch_path
+		     , atch_down_hit
+		     , atch_del_yn
+		     , TO_CHAR(atch_reg_date,'YYYY-MM-DD HH24:MI') AS atch_reg_date
+		  FROM attach
+		 WHERE atch_no = #{atchNo}
+		   AND atch_del_yn = 'N'	
+	</select>
+	
+	<select id="getAttachByParentNoList" 
+	        parameterType="int"
+	        resultType="com.movie.attach.vo.AttachVO" >
+		SELECT atch_no
+		     , atch_parent_no
+		     , atch_category
+		     , atch_file_name
+		     , atch_original_name
+		     , atch_file_size
+		     , atch_fancy_size
+		     , atch_content_type
+		     , atch_path
+		     , atch_down_hit
+		     , atch_del_yn
+		     , TO_CHAR(atch_reg_date,'YYYY-MM-DD HH24:MI') AS atch_reg_date
+		  FROM attach
+		 WHERE atch_parent_no = #{atchParentNo}
+		   AND atch_del_yn = 'N'		
+	</select>
+	
+	<insert id="insertAttach" 
+	        parameterType="com.movie.attach.vo.AttachVO">
+	  INSERT INTO attach (
+		      atch_no            , atch_parent_no       , atch_category
+		    , atch_file_name     , atch_original_name   , atch_file_size
+		    , atch_fancy_size    , atch_content_type    , atch_path
+		    , atch_down_hit      , atch_del_yn          , atch_reg_date
+		) VALUES (      
+		      seq_attach.nextval , #{atchParentNo}      , #{atchCategory}
+		    , #{atchFileName}    , #{atchOriginalName}  , #{atchFileSize}
+		    , #{atchFancySize}   , #{atchContentType}   , #{atchPath}
+		    ,0                   , 'N'                  , SYSDATE
+		)	
+	</insert>
+	
+	<update id="increaseDownHit" parameterType="int">		
+		UPDATE attach
+	     SET atch_down_hit =  atch_down_hit + 1
+	   WHERE atch_no = #{atchNo}
+	</update>
+	
+	<delete id="deleteAttach">
+	
+	</delete>
+	
+	<delete id="deleteAttaches">
+	
+	</delete>
+	
+	
+
+</mapper>  
+

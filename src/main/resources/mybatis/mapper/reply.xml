@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.movie.reply.dao.IReplyDao">
+
+	<select id="getReplyCountByParent" 
+	        parameterType="com.movie.reply.vo.ReplySearchVO" 
+	        resultType="int" >
+		SELECT COUNT(*)
+	    FROM reply
+	   WHERE re_category   = #{reCategory}
+	     AND re_parent_no = #{reParentNo}
+	</select>
+	
+	<select id="getReplyListByParent" 
+	        parameterType="com.movie.reply.vo.ReplySearchVO" 
+	        resultType="com.movie.reply.vo.ReplyVO" >
+		<include refid="common.PRE_PAGING_QRY" />	        
+		SELECT re_no
+	       , re_category
+	       , re_parent_no
+	       , re_mem_id
+	       , (SELECT mem_name FROM member WHERE mem_id = re_mem_id) AS re_mem_name
+	       , re_content
+	       , re_ip
+	       , TO_CHAR(re_reg_date,'YY/MM/DD HH24:MI') AS re_reg_date
+	    FROM reply
+	   WHERE re_category   = #{reCategory}
+	     AND re_parent_no = #{reParentNo}
+	   ORDER BY re_no ASC  
+	 	<include refid="common.POST_PAGING_QRY" />
+	</select>
+	
+	<select id="getReply" 
+	        parameterType="int"
+	        resultType="com.movie.reply.vo.ReplyVO" >
+		SELECT re_no
+	       , re_category
+	       , re_parent_no
+	       , re_mem_id
+	       , re_content
+	       , re_ip
+	       , TO_CHAR(re_reg_date,'YY/MM/DD HH24:MI') AS re_reg_date
+	    FROM reply	 
+	   WHERE re_no = #{reNo}        
+	</select>
+	
+	<insert id="insertReply"
+	        parameterType="com.movie.reply.vo.ReplyVO">
+		INSERT INTO reply (
+    			 re_no        , re_category   , re_parent_no
+         , re_mem_id    , re_content    , re_ip
+         , re_reg_date  
+        ) VALUES (
+           seq_reply.nextval , #{reCategory} , #{reParentNo}
+         , #{reMemId}        , #{reContent}  , #{reIp}
+         , SYSDATE   
+        )
+	</insert>
+	
+	<update id="updateReply"
+	        parameterType="com.movie.reply.vo.ReplyVO" >
+	  UPDATE reply
+	     SET re_content = #{reContent}
+	   WHERE re_no = #{reNo}
+	</update>	
+	
+	<delete id="deleteReply"
+	        parameterType="com.movie.reply.vo.ReplyVO" >
+    DELETE FROM reply
+     WHERE re_no = #{reNo}	        
+	</delete>
+
+</mapper>  
+

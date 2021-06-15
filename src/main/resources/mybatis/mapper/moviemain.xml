@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.movie.main.dao.IMainDao">
+  <select id="getMovieCount" resultType="int" parameterType="com.movie.main.vo.MovieSearchVO">
+	SELECT count(distinct m.movie_cd) as cnt
+	FROM movie_real m , genres g
+	WHERE m.movie_cd = g.movie_cd
+	<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchWord)">
+		AND m.movie_nm LIKE '%' || #{searchWord} || '%'
+	</if>
+	<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchCategory)">
+		AND g.genre_cd = #{searchCategory}
+	</if>
+</select>
+    
+  <select id="getMovieList" resultType="com.movie.main.vo.MovieVO" parameterType="com.movie.main.vo.MovieSearchVO">
+  		<include refid="common.PRE_PAGING_QRY" />
+			SELECT distinct m.movie_cd
+				 , m.movie_img
+				 , m.movie_nm
+				 , m.open_dt
+			 FROM
+				  movie_real m , genres g
+			WHERE m.movie_cd = g.movie_cd
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchWord)">
+					AND m.movie_nm LIKE '%' || #{searchWord} || '%'
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchCategory)">
+			AND g.genre_cd = #{searchCategory}
+			</if>
+			ORDER BY 4 DESC
+		<include refid="common.POST_PAGING_QRY" />
+  </select>
+  
+  <select id="getMovie" resultType="com.movie.main.vo.MovieVO" parameterType="String">
+  	SELECT    movie_cd
+		    , movie_nm
+		    , show_tm
+		    , to_char(TO_DATE(open_dt,'YYYY-MM-DD'),'YYYY-MM-DD') as open_dt
+		    , movie_img
+		    , movie_content
+	 FROM  movie_real
+	 WHERE movie_cd = #{movieCd}  
+  </select>
+  
+  <select id="getActorListByMovieCd" parameterType="String" resultType="com.movie.main.vo.ActorVO">
+  	SELECT b.movie_cd
+	     , a.people_cd as actor_cd
+	     , a.people_nm as actor_nm
+	     , a.people_nm_en as actor_nm_en
+	     , b.cast    
+	  FROM actors a, movie_actors b 
+	 WHERE a.people_cd = b.people_cd
+	   AND b.movie_cd = #{movieCd}	     
+  </select>
+  
+  <select id="getDirectorListByMovieCd" parameterType="String" resultType="com.movie.main.vo.DirectorVO">
+	  SELECT B.movie_cd
+	       , A.people_cd
+	       , A.people_nm
+	       , A.people_nm_en
+	    FROM DIRECTORS A, MOVIE_DIRECTORS B
+	   WHERE A.people_cd = B.people_cd
+	     AND B.movie_cd  =#{movieCd}
+  </select>
+  
+  <select id="getCompanyListByMovieCd" parameterType="String" resultType="com.movie.main.vo.CompanyVO">
+   SELECT B.company_nm , A.company_part_nm , A.company_cd , A.movie_cd
+	 FROM  MOVIE_COMPANYS A, COMPANYS B
+	WHERE A.COMPANY_CD = B.COMPANY_CD
+	  AND A.MOVIE_CD  =#{movieCd}
+  </select>
+  
+  <select id="getGenreListByMovieCd" parameterType="String" resultType="com.movie.main.vo.GenreVO">
+  	SELECT B.genre_cd , (select comm_nm from comm_code where comm_cd =genre_cd ) as genre_nm
+	  FROM MOVIE_REAL A, genres B
+	WHERE A.MOVIE_CD = B.MOVIE_CD
+	  AND A.MOVIE_CD  =#{movieCd}
+  </select>
+  
+  <insert id="insertMovie" parameterType="com.movie.main.vo.MovieVO">		
+		 	INSERT INTO movie_real (
+		      movie_cd
+		    , movie_nm
+		    , movie_img
+		    , show_tm
+		    , open_dt
+		    , movie_content
+		) VALUES (
+		      #{movieCd}
+		    , #{movieNm}
+		    , #{movieImg}
+		    , #{showTm}
+		    , #{openDt}
+		    , #{movieContent}
+		)
+  </insert>
+  
+  <update id="updateMovie" parameterType="com.movie.main.vo.MovieVO">		
+  		UPDATE movie_real
+		SET movie_nm = #{movieNm}
+		    , show_tm =  #{showTm}
+		    , open_dt = #{openDt}
+		    , movie_img = #{movieImg}
+		    , movie_content = #{movieContent}
+		WHERE
+    		movie_cd = #{movieCd}
+  </update>
+  
+  <insert id="insertMovieActor" parameterType="com.movie.main.vo.ActorVO">
+  		INSERT INTO movie_actors (
+		   	  people_cd
+		    , movie_cd
+		) VALUES (
+		      #{actorCd}
+		    , #{movieCd}
+		)
+  </insert>
+  
+  <insert id="insertMovieDirector" parameterType="com.movie.main.vo.DirectorVO">
+		INSERT INTO movie_directors (
+		      movie_cd
+		    , people_cd
+		) VALUES (
+		      #{movieCd}
+		    , #{peopleCd}
+		)
+  </insert>
+  
+  <insert id="insertMovieCompany" parameterType="com.movie.main.vo.CompanyVO">
+  		INSERT INTO movie_companys (
+		      company_cd
+		    , company_part_nm
+		    , movie_cd
+		) VALUES (
+		      #{companyCd}
+		    , '제작사'
+		    , #{movieCd}
+		)
+  </insert>
+  	
+  <insert id="insertGenre" parameterType="com.movie.main.vo.GenreVO">
+  		INSERT INTO genres (
+		      movie_cd
+		    , genre_cd
+		) VALUES (
+   	          #{movieCd}
+		    , #{genreCd}
+		)
+  </insert>
+  
+  
+  <select id="selectNewMovieCode" resultType="String">
+  	SELECT to_char(sysdate,'YYYY') || seq_movie.nextval FROM dual
+  </select>
+  
+  <select id="getSimilarMovieList"   resultType="com.movie.main.vo.MovieVO"  >
+ 	SELECT   movie_cd
+		           , movie_nm
+		           , show_tm
+		           , to_char(TO_DATE(open_dt,'YYYY-MM-DD'),'YYYY.MM.DD') as open_dt
+		           , movie_img
+		           , movie_content
+	 FROM  movie_real
+	 WHERE 1=1
+	  <choose>
+            <when test="movieList.size != 0">
+                AND movie_cd IN 
+                <foreach collection="movieList" item="item" index="index" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </when>
+        </choose>
+</select>
+
+  </mapper>

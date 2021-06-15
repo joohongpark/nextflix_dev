@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.movie.main.dao.IDirectorDao">
+	
+	<select id="getDirectorCount" resultType="int" parameterType="com.movie.main.vo.DirectorVO">
+		SELECT count(*) as cnt
+		FROM directors a
+		<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchWord)">
+			WHERE a.people_nm LIKE '%' || #{searchWord} || '%'
+		</if>
+	</select>
+
+	<select id="getDirectorList" parameterType="com.movie.main.vo.DirectorSearchVO"
+				               resultType="com.movie.main.vo.DirectorVO">
+		<include refid="common.PRE_PAGING_QRY" />
+			SELECT a.people_cd
+				 , a.people_nm
+			 	 , a.people_nm_en
+			FROM directors a
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchWord)">
+				WHERE a.people_nm LIKE '%' || #{searchWord} || '%'
+			</if>
+		<include refid="common.POST_PAGING_QRY" />
+	</select>
+</mapper>

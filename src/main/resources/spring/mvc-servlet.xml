@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+	<!-- Spring @MVC 기반으로 기본 설정 -->
+	<mvc:annotation-driven/>
+	
+	<!-- 정적자원 (css, img, js, ..)을 처리하는 방법 2 -->
+	<!-- 1.요청에 대한 매핑이 없다면 WAS에게 넘기도록 -->
+	<mvc:default-servlet-handler />
+	
+	<!-- 뷰 결정자 지정 -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/views/"/>
+		<property name="suffix" value=".jsp"/>
+	</bean>
+
+	<!-- 매핑에 대해서 바로 뷰를 설정하고자 하는 경우(GET방식, 컨트롤러가 필요없는 경우) -->
+	<!-- view-name 이 없다면 path 정보가 뷰로 결정된다. -->
+	
+	<context:component-scan base-package="com.movie" use-default-filters="false">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	
+  	<!-- 업로드처리를 위한 빈 등록  -->
+	<bean id="multipartResolver" 
+	  			 class="org.springframework.web.multipart.support.StandardServletMultipartResolver" />
+	  			 
+<!-- 	hyun -->
+	<!-- 정적자원의 요청정보 와 실제경로 설정  -->
+	<mvc:resources mapping="/css/**" location="/css/" />
+  	<mvc:resources mapping="/bootstrap-3.3.2/**" location="/bootstrap-3.3.2/" />
+  	
+	<mvc:interceptors>
+		<!-- 전역전 인터셉터 등록 -->
+		<bean id="loggingInterceptor" class="com.movie.common.interceptor.LoggingInterceptor" />
+		
+		<!-- 매핑별 인터셉터 -->
+		<mvc:interceptor>
+			<mvc:mapping path="/member/**"/>
+			<mvc:mapping path="/reply/**"/>
+			<mvc:mapping path="/keep/**"/>
+			<!-- 매핑된것중 제외매핑 -->
+			<mvc:exclude-mapping path="/reply/replyList"/>
+			<bean class="com.movie.common.interceptor.LoginCheckInterceptor"/>		
+		</mvc:interceptor>
+	
+	</mvc:interceptors>
+	
+
+</beans>

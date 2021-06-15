@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="dataSource"
+		class="org.apache.commons.dbcp2.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="#{app['jdbc.driverClassName']}" />
+		<property name="url" value="#{app['jdbc.url']}" />
+		<property name="username" value="#{app['jdbc.username']}" />
+		<property name="password" value="#{app['jdbc.password']}" />
+		<property name="defaultAutoCommit" value="#{app['jdbc.defaultAutoCommit']}" /> <!-- or false -->
+		<property name="maxTotal" value="#{app['jdbc.maxTotal']}" /> <!-- or 4 -->
+	</bean>
+	
+	<!-- mybatis  -->
+	<bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="configLocation" value="classpath:/mybatis/mybatis-config.xml"/>
+		<property name="mapperLocations" value="classpath:/mybatis/mapper/*.xml"/>
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	
+	<mybatis-spring:scan base-package="com.movie" annotation="org.apache.ibatis.annotations.Mapper"/>
+	
+</beans>

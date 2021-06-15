@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.movie.keep.dao.IKeepDao">
+  
+<!--   <resultMap id="map4keepList" type="com.movie.keep.vo.KeepVO" > -->
+<!-- 		<id     column="movie_cd"       property="keMovieCd" /> -->
+<!-- 		<result column="movie_nm"      	property="keMovieName" /> -->
+<!-- 		<result column="mem_id"        	property="keMemId" /> -->
+<!-- 		<result column="open_dt"        property="keOpenDt" /> -->
+<!-- 		<result column="genre_nm"   	property="keGenre" /> -->
+<!-- 		<result column="keep_reg_dt"   	property="keRegDt" /> -->
+<!-- 		<result column="mem_age"        property="keMemAge" /> -->
+<!-- 		<result column="mem_gender"     property="keMemGender" /> -->
+<!-- 	</resultMap> -->
+  	
+   <select id="getKeepCountByMember" resultType="int" parameterType="com.movie.keep.vo.KeepSearchVO" >
+	   SELECT COUNT(*) as cnt     
+				  FROM keep 
+				 WHERE mem_id = #{keMemId}
+		<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchWord)">
+		 		<choose>
+		 			<when test='searchType eq "N"'>
+		 				AND ke_movie_name like '%' || #{searchWord} || '%'
+		 			</when>
+		 			<when test='searchType == "G"'>
+		 				AND ke_genre like '%' || #{searchWord} || '%'
+		 			</when>
+		 		</choose>
+		 </if>
+		 <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(keMovieGenre)">
+		 		AND ke_genre = #{keMovieGenre}
+		 </if>		
+   </select>
+   <select id="getKeepListByMember"  resultType="com.movie.keep.vo.KeepVO"   parameterType="com.movie.keep.vo.KeepSearchVO">
+<!-- 	       resultMap="map4keepList" > -->
+<!-- 		<include refid="common.PRE_ATTACH_PAGING_QRY" />	        -->
+		select DISTINCT a.movie_nm as keMovieName
+              , to_char(TO_DATE(a.open_dt,'YYYY-MM-DD'),'YYYY.MM.DD') as keOpenDt
+              , c.comm_nm  as keGenre
+              , TO_CHAR(d.keep_reg_dt,'YYYY/MM/DD') as keRegDt
+              , a.movie_cd as keMovieCd
+              , e.mem_id as keMemId
+<!--               , (SELECT TRUNC(MONTHS_BETWEEN(TRUNC(SYSDATE), e.mem_bir) / 12 ) FROM MEMBER -->
+		FROM movie_real a
+			, genres 	b
+			, comm_code c
+			, keep 		d
+			, member 	e
+		WHERE a.movie_cd =  b.movie_cd
+		  AND b.genre_cd = c.comm_cd
+		  AND b.movie_cd = d.movie_cd
+          AND d.mem_id = e.mem_id
+           AND e.mem_id = #{keMemId}
+           order by keRegDt desc
+           
+<!--          	SELECT T1.MOVIE_CD -->
+<!-- 			     , T1.MOVIE_NM -->
+<!-- 			     , NVL(T1.SCORE_NT,0) AS NT       -->
+<!-- 			     , T1.DR -->
+<!-- 			     ,( -->
+<!--        			 SELECT    -->
+<!--                  SUBSTR(  XMLAGG( -->
+<!--                     XMLELEMENT(COL ,',', (SELECT COMM_NM -->
+<!--                                                 FROM COMM_CODE -->
+<!--                                                 WHERE COMM_CD =A.GENRE_CD)) ).EXTRACT('//text()' -->
+<!--                 ).GETSTRINGVAL() -->
+<!--                , 2)   -->
+<!-- 		        FROM GENRES A  -->
+<!-- 		        WHERE MOVIE_CD = T1.MOVIE_CD -->
+<!-- 		        GROUP BY MOVIE_CD  -->
+<!-- 		        ) AS GENRES_NM -->
+<!-- 			FROM movie_check T1 -->
+	</select>
+   <insert id="insertKeep" parameterType="com.movie.keep.vo.KeepVO">
+   		INSERT INTO keep (
+		    movie_cd        , mem_id
+		    , mem_age       , keep_reg_dt
+		) VALUES (
+		    #{keMovieCd}    , #{keMemId}
+		    , (SELECT TRUNC(MONTHS_BETWEEN(TRUNC(SYSDATE), mem_bir) / 12 ) FROM MEMBER
+              where mem_id = #{keMemId})
+		    , SYSDATE
+		)
+   </insert>
+   <delete id="deleteKeep" parameterType="com.movie.keep.vo.KeepVO">
+   		DELETE FROM KEEP 
+        WHERE MOVIE_CD =  #{keMovieCd}
+        AND mem_id = #{keMemId}
+   </delete>
+   		
+  </mapper>

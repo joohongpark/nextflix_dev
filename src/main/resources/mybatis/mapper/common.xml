@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="common">
+  		<sql id="PRE_PAGING_QRY">
+  			SELECT *
+  				 FROM ( SELECT rownum as rn, a.* 
+  				 		FROM (  
+  		</sql>
+   	
+   		<sql id="POST_PAGING_QRY">
+   			 					) a 
+	 			WHERE rownum &lt;= #{lastRow} ) b 
+			WHERE rn between #{firstRow} and #{lastRow} 
+   		</sql>
+   
+  		<sql id="PRE_ATTACH_PAGING_QRY">
+  			SELECT b.*
+  							, c.atch_no
+  							, c.atch_original_name
+  							, c.atch_fancy_size
+  				 FROM ( SELECT rownum as rn, a.* 
+  				 		FROM (  
+  		</sql>
+   	
+   		<sql id="POST_ATTACH_PAGING_QRY">
+   			 					) a 
+	 			WHERE rownum &lt;= #{lastRow} 
+	 			) b LEFT JOIN attach c
+        					ON ( ${columnName} = atch_parent_no AND atch_category = ${category} )
+			WHERE rn between #{firstRow} and #{lastRow}
+			ORDER BY ${columnName} DESC 
+   		</sql>
+   
+   
+   
+  </mapper>

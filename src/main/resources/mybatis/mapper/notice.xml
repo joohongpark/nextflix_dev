@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.movie.notice.dao.INoticeDao">
+
+	<resultMap id="map4noticeList" type="com.movie.notice.vo.NoticeVO" >
+		<id     column="no_num"        property="noNum" />
+		<result column="no_title"      property="noTitle" />
+		<result column="no_category"   property="noCategory" />
+		<result column="no_category_nm" property="noCategoryNm" />
+		<result column="no_writer"     property="noWriter" />
+		<result column="no_reg_date"   property="noRegDate" />
+		<result column="no_hit"        property="noHit" />
+ 		<collection property="attaches"  
+		            ofType="com.movie.attach.vo.AttachVO"  >
+			<id     column="atch_no"            property="atchNo" />
+			<result column="atch_original_name" property="atchOriginalName" />
+			<result column="atch_fancy_size" property="atchFancySize" />
+		</collection>
+	</resultMap>
+
+
+	<select id="getNoticeCount" 
+	        resultType="int" 
+	        parameterType="com.movie.notice.vo.NoticeSearchVO" >
+			SELECT COUNT(*) as cnt     
+			  FROM notice 
+			 WHERE no_del_yn = 'N'
+			 <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchWord)">
+		 		<choose>
+		 			<when test='searchType eq "T"'>
+		 				AND no_title like '%' || #{searchWord} || '%'
+		 			</when>
+		 			<when test='searchType == "W"'>
+		 				AND no_writer like '%' || #{searchWord} || '%'
+		 			</when>
+		 			<when test='searchType == "C"'>
+		 				AND no_content like '%' || #{searchWord} || '%'
+		 			</when>
+		 		</choose>
+		 </if>
+		 <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchCategory)">
+		 		AND no_category = #{searchCategory}
+		 </if>		 
+			 
+	</select>
+	
+	<select id="getNoticeList" 
+	       parameterType="com.movie.notice.vo.NoticeSearchVO"
+	       resultMap="map4noticeList" >
+		<include refid="common.PRE_ATTACH_PAGING_QRY" />	       
+		SELECT 	  no_num     
+			      , no_title  
+				  , no_category
+		      	  , (select comm_nm from comm_code where comm_cd  = no_category) as no_category_nm 
+				  , no_writer   
+				  , TO_CHAR(no_reg_date,'YYYY/MM/DD') as no_mod_date
+				  , TO_CHAR(no_reg_date,'YYYY-MM-DD') as no_reg_date 
+				  , no_hit   
+		  FROM notice 
+		  WHERE  no_del_yn = 'N' 
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchWord)">
+		 		<choose>
+		 			<when test='searchType == "T"'>
+		 				AND no_title like '%' || #{searchWord} || '%'
+		 			</when>
+		 			<when test='searchType == "W"'>
+		 				AND no_writer like '%' || #{searchWord} || '%'
+		 			</when>
+		 			<when test='searchType == "C"'>
+		 				AND no_content like '%' || #{searchWord} || '%'
+		 			</when>
+		 		</choose>
+		 </if>
+		 <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchCategory)">
+		 		AND no_category = #{searchCategory}
+		 </if>
+		 	ORDER BY no_num DESC 
+		 <include refid="common.POST_ATTACH_PAGING_QRY" > 
+		 	 <property name="category" value="'NOTICE'" />
+		 	 <property name="columnName" value="no_num"/>
+		 </include>		 
+	</select>
+	
+	<!-- 파라미터가 프리미티브형인경우 이름은 흐름에 맞게 any  -->
+	<select id="getNotice" parameterType="int"
+	        resultType="com.movie.notice.vo.NoticeVO"   >
+			SELECT no_num   
+			     , no_title 
+			     , no_category    
+			     , (select comm_nm from comm_code where comm_cd  = no_category) as no_category_nm 
+			     , no_writer     
+			     , no_pass       
+			     , no_content    
+			     , no_ip         
+			     , no_hit         
+					  , TO_CHAR(no_reg_date,'YYYY-MM-DD') as no_reg_date		
+					  , TO_CHAR(no_mod_date,'YYYY-MM-DD') as no_mod_date
+			     , no_del_yn  
+			  FROM notice 
+			 WHERE no_num = #{milkis}
+	</select>
+	
+	<insert id="insertNotice" parameterType="com.movie.notice.vo.NoticeVO">
+		<selectKey keyProperty="noNum" resultType="int" order="BEFORE">
+		  SELECT seq_notice.nextval FROM dual
+		</selectKey>
+		INSERT INTO notice (  
+			      no_num       , no_title     , no_category     
+			    , no_writer    , no_pass      , no_content      
+			    , no_ip        , no_hit       , no_reg_date     
+			    , no_del_yn       
+			   ) VALUES (         
+			      #{noNum}       , #{noTitle}  , #{noCategory}   
+			    , #{noWriter}    , #{noPass}   , #{noContent}        
+			    , #{noIp}        , 0           ,  SYSDATE   
+			    , 'N'        
+			   ) 
+	</insert>	
+	
+	<update id="updateNotice" 
+	        parameterType="com.movie.notice.vo.NoticeVO"  >
+			UPDATE notice
+				  SET no_title    = #{noTitle}     
+					  , no_category = #{noCategory}
+					  , no_writer   = #{noWriter}  
+					  , no_content  = #{noContent} 
+					  , no_mod_date = SYSDATE 
+				WHERE no_num  = #{noNum} 
+	</update>
+	
+	<delete id="deleteNotice" 
+	        parameterType="com.movie.notice.vo.NoticeVO" >
+			UPDATE notice 
+				  SET no_del_yn = 'Y'	 
+				WHERE no_num = #{noNum}
+	</delete>
+	
+	<update id="increaseHit" 
+	        parameterType="int" >
+			UPDATE notice
+				  SET no_hit = no_hit + 1	 
+				WHERE no_num = #{noNum}	
+	</update>
+	
+</mapper>  

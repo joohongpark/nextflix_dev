@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.movie.code.dao.ICommonCodeDao">
+	
+	<cache />
+	
+	<select id="getCodeListByParent" 
+	        parameterType="String"
+	        resultType="com.movie.code.vo.CodeVO" >
+			SELECT comm_cd     
+			     , comm_nm     
+			     , comm_ord    
+			     , comm_parent 
+			  FROM comm_code  
+			 WHERE comm_parent = #{code} 
+			 ORDER BY comm_ord ASC 			        
+	</select>
+
+</mapper>  
+
